@@ -366,7 +366,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		TLorentzVector locPiPiPiP4_Measured = locPiPlus1P4_Measured + locPiMinus1P4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured;
                 dHist_MPiPiPi->Fill(locPiPiPiP4.M());
 
-                if(fabs(omega_PDG - omega_min) > 0.05) {
+                if(omega_min > 0.05) {
                         dComboWrapper->Set_IsComboCut(true);
                         continue;
                 }

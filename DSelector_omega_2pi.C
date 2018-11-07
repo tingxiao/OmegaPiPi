@@ -42,8 +42,8 @@ void DSelector_omega_2pi::Init(TTree *locTree)
 	//PID
 	dAnalysisActions.push_back(new DHistogramAction_ParticleID(dComboWrapper, false));
 	//below: value: +/- N ns, Unknown: All PIDs, SYS_NULL: all timing systems
-	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.2, PiPlus, SYS_TOF));
-	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.2, PiMinus, SYS_TOF));
+	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.5, PiPlus, SYS_TOF));
+	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.5, PiMinus, SYS_TOF));
 
 	//MASSES
 	dAnalysisActions.push_back(new DHistogramAction_InvariantMass(dComboWrapper, false, Pi0, 1100, 0.08, 0.19, "Pi0"));
@@ -100,10 +100,20 @@ void DSelector_omega_2pi::Init(TTree *locTree)
         dHist_KinFitChiSq = new TH1F("KinFitChiSq", ";KinFit #chi^{2}", 200, 0.0, 100.0);
 
         dHist_MPiPiPi = new TH1F("MPiPiPi", ";M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 100, 0.3, 1.3 );
+        dHist_MPiPi = new TH1F("MPiPi", ";M(#pi^{+}#pi^{-}) (GeV)", 120, 0.3, 1.5 );
 
         dHist_M5Pi = new TH1F("M5Pi", ";M(#pi^{+}#pi^{-}#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5);
+
+        dHist_MOmegaPip = new TH1F("MOmegaPip", ";M(#omega#pi^{+}) (GeV)", 500, 0.0, 5);
+        dHist_MOmegaPim = new TH1F("MOmegaPim", ";M(#omega#pi^{-}) (GeV)", 500, 0.0, 5);
+
         dHist_MOmegaPiPi = new TH1F("MOmegaPiPi", ";M(#omega#pi^{+}#pi^{-}) (GeV)", 500, 0.0, 5);
         dHist_MOmegaPiPi_acc = new TH1F("MOmegaPiPi_acc", ";M(#omega#pi^{+}#pi^{-}) (GeV)", 500, 0.0, 5);
+	dHist_Pi0Mass = new TH1F("Pi0Mass", ";#gamma#gamma Invariant Mass", 680, 0.05, 0.22);
+
+	dHist_MOmegaPiPi_vs_MPiPiPi = new TH2I("MOmegaPiPi_vs_MPiPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5.0, 500, 0.0, 5.0);
+        dHist_MOmegaPiPi_vs_MPiPi = new TH2I("MOmegaPiPi_vs_MPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}) (GeV) (after #omega cut)", 500, 0.0, 5.0, 500, 0.0, 5.0);
+
 
 
 	/************************** EXAMPLE USER INITIALIZATION: CUSTOM OUTPUT BRANCHES - MAIN TREE *************************/
@@ -197,6 +207,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		//Multiple combos: Contain maps within a set (easier, faster to search)
 	set<map<Particle_t, set<Int_t> > > locUsedSoFar_MissingMass;
         set<map<Particle_t, set<Int_t> > > locUsedSoFar_OmegaPiPiMass;
+	set<set<Int_t> > locUsedSoFar_Pi0Mass;
 
 	//INSERT USER ANALYSIS UNIQUENESS TRACKING HERE
 
@@ -261,6 +272,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 
 		// Get Measured P4's:
 		//Step 0
+                TLorentzVector locBeamX4_Measured = dComboBeamWrapper->Get_X4_Measured();
 		TLorentzVector locBeamP4_Measured = dComboBeamWrapper->Get_P4_Measured();
 		TLorentzVector locPiPlus1P4_Measured = dPiPlus1Wrapper->Get_P4_Measured();
 		TLorentzVector locPiPlus2P4_Measured = dPiPlus2Wrapper->Get_P4_Measured();
@@ -279,6 +291,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		TLorentzVector locMissingP4_Measured = locBeamP4_Measured + dTargetP4;
 		locMissingP4_Measured -= locPiPlus1P4_Measured + locPiPlus2P4_Measured + locPiMinus1P4_Measured + locPiMinus2P4_Measured + locProtonP4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured;
 
+                TLorentzVector locPi0P4 = locPhoton1P4 + locPhoton2P4;
                 TLorentzVector locPiPiPiP4_combo11 = locPiPlus1P4 + locPiMinus1P4 + locPhoton1P4 + locPhoton2P4;
                 TLorentzVector locPiPiPiP4_combo12 = locPiPlus1P4 + locPiMinus2P4 + locPhoton1P4 + locPhoton2P4;
                 TLorentzVector locPiPiPiP4_combo21 = locPiPlus2P4 + locPiMinus1P4 + locPhoton1P4 + locPhoton2P4;
@@ -286,6 +299,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 
                 TLorentzVector locOmegaPiPiP4 = locPiPlus1P4 + locPiMinus1P4 + locPiPlus2P4 + locPiMinus1P4 + locPhoton1P4 + locPhoton2P4;
 
+		TLorentzVector locPi0P4_Measured = locPhoton1P4_Measured + locPhoton2P4_Measured;
                 TLorentzVector locPiPiPiP4_combo11_Measured = locPiPlus1P4_Measured + locPiMinus1P4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured;
                 TLorentzVector locPiPiPiP4_combo12_Measured = locPiPlus1P4_Measured + locPiMinus2P4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured;
                 TLorentzVector locPiPiPiP4_combo21_Measured = locPiPlus2P4_Measured + locPiMinus1P4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured;
@@ -315,7 +329,41 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		dTreeInterface->Fill_TObject<TLorentzVector>("my_p4_array", locMyComboP4, loc_i);
 		*/
 
-		dHist_M5Pi->Fill(locOmegaPiPiP4.M());
+
+		/******************************************** ACCIDENTAL SUBRACTION INFO *******************************************/
+
+
+		// time difference between tagger and RF (corrected for production vertex position relative to target center)
+              	double locDeltaTRF_Measured = locBeamX4_Measured.T() - (dComboWrapper->Get_RFTime_Measured()
+                                                  + (locBeamX4_Measured.Z() - dComboWrapper->Get_TargetCenter().Z() )/29.9792458);
+		dHist_RFTimeMeasured->Fill(locDeltaTRF_Measured);
+
+                double locDeltaTRF = locBeamX4.T() - (dComboWrapper->Get_RFTime()
+                                                  + (locBeamX4.Z() - dComboWrapper->Get_TargetCenter().Z() )/29.9792458);
+                dHist_RFTime->Fill(locDeltaTRF);
+
+		// calculate accidental subtraction weight based on time difference
+
+		double locWeight = 0.; // weight to accidentally subtracted histgorams
+		bool locAccid = false; // flag to fill separate prompt and accidental histograms for later subtraction
+
+		if(fabs(locDeltaTRF_Measured) < 0.5*4.008) { // prompt signal recieves a weight of 1
+			locWeight = 1.;
+			locAccid = false;
+		}
+                else { // accidentals recieve a weight of 1/# RF bunches included in TTree (8 in this case)
+			locWeight = -1./8.;
+			locAccid = true;
+		}
+
+
+                if(locAccid) {
+                        dComboWrapper->Set_IsComboCut(true);
+                        continue;
+                }
+
+		/**************************************** FILL 5PI MASS BEFORE PID CUTS *************************************/
+		dHist_M5Pi->Fill(locOmegaPiPiP4_Measured.M());
 
                 // make pions from omega as 1, the other pions as 2
 
@@ -362,14 +410,19 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
                         locPiMinus1P4 = temp_pi;
                 }
 
+                // 3 pions from omega
                 TLorentzVector locPiPiPiP4 = locPiPlus1P4 + locPiMinus1P4 + locPhoton1P4 + locPhoton2P4;
 		TLorentzVector locPiPiPiP4_Measured = locPiPlus1P4_Measured + locPiMinus1P4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured;
-                dHist_MPiPiPi->Fill(locPiPiPiP4.M());
 
-                if(omega_min > 0.05) {
-                        dComboWrapper->Set_IsComboCut(true);
-                        continue;
-                }
+		// 2 pions not from omega
+                TLorentzVector locPiPiP4 = locPiPlus2P4 + locPiMinus2P4;
+                TLorentzVector locPiPiP4_Measured = locPiPlus2P4_Measured + locPiMinus2P4_Measured;
+
+		// omega + pi
+                TLorentzVector locPiPiPiPipP4 = locPiPlus1P4 + locPiMinus1P4 + locPhoton1P4 + locPhoton2P4 + locPiPlus2P4;
+                TLorentzVector locPiPiPiPipP4_Measured = locPiPlus1P4_Measured + locPiMinus1P4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured + locPiPlus2P4_Measured;
+                TLorentzVector locPiPiPiPimP4 = locPiPlus1P4 + locPiMinus1P4 + locPhoton1P4 + locPhoton2P4 + locPiMinus2P4;
+                TLorentzVector locPiPiPiPimP4_Measured = locPiPlus1P4_Measured + locPiMinus1P4_Measured + locPhoton1P4_Measured + locPhoton2P4_Measured + locPiMinus2P4_Measured;
 
 
 		/**************************************** EXAMPLE: HISTOGRAM BEAM ENERGY *****************************************/
@@ -427,6 +480,28 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 			continue;
 		}
 
+
+
+		/***************************************** HISTOGRAM Pi0 INVARIANT MASS ******************************************/
+
+		double locPi0Mass = locPi0P4_Measured.M();
+
+		//Uniqueness tracking:
+		set<Int_t> locUsedThisCombo_Pi0Mass;
+		locUsedThisCombo_Pi0Mass.insert(locPhoton1NeutralID);
+		locUsedThisCombo_Pi0Mass.insert(locPhoton2NeutralID);
+
+		//compare to what's been used so far
+		if(locUsedSoFar_Pi0Mass.find(locUsedThisCombo_Pi0Mass) == locUsedSoFar_Pi0Mass.end())
+		{
+			//unique missing mass combo: histogram it, and register this combo of particles
+			dHist_Pi0Mass->Fill(locPi0Mass);
+			locUsedSoFar_Pi0Mass.insert(locUsedThisCombo_Pi0Mass);
+		}
+
+
+                /***************************************** HISTOGRAM OMEGA PIPI INVARIANT MASS, ETC ******************************************/
+
                 map<Particle_t, set<Int_t> > locUsedThisCombo_OmegaPiPiMass;
                 locUsedThisCombo_OmegaPiPiMass[PiPlus].insert(locPiPlus1TrackID);
                 locUsedThisCombo_OmegaPiPiMass[PiPlus].insert(locPiPlus2TrackID);
@@ -435,23 +510,27 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
                 locUsedThisCombo_OmegaPiPiMass[Gamma].insert(locPhoton1NeutralID);
                 locUsedThisCombo_OmegaPiPiMass[Gamma].insert(locPhoton2NeutralID);
 
-                // RF time stuff
-                double locDeltaTRF = locBeamX4.T() - (dComboWrapper->Get_RFTime() 
-                                                  + (locBeamX4.Z() - dComboWrapper->Get_TargetCenter().Z() )/29.9792458);
-                dHist_RFTime->Fill(locDeltaTRF);
-
                 //compare to what's been used so far
                 if(locUsedSoFar_OmegaPiPiMass.find(locUsedThisCombo_OmegaPiPiMass) == locUsedSoFar_OmegaPiPiMass.end())
                 {
                   // let's plot some masses
-                  if(fabs(locDeltaTRF) < 2.){
-                    dHist_MOmegaPiPi->Fill(locOmegaPiPiP4.M());
 
-                  } else {
-                    dHist_MOmegaPiPi_acc->Fill(locOmegaPiPiP4.M());
-                  }
+                        dHist_MPiPi->Fill(locPiPiP4_Measured.M());
+			dHist_MPiPiPi->Fill(locPiPiPiP4_Measured.M());
+			dHist_MOmegaPiPi_vs_MPiPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiPiP4_Measured.M());
 
-                  locUsedSoFar_OmegaPiPiMass.insert(locUsedThisCombo_OmegaPiPiMass);
+	                if(omega_min > 0.05) {
+        	                dComboWrapper->Set_IsComboCut(true);
+                	        continue;
+                	}
+
+			dHist_MOmegaPiPi->Fill(locOmegaPiPiP4_Measured.M());
+                        dHist_MOmegaPiPi_vs_MPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiP4_Measured.M());
+
+                        dHist_MOmegaPip->Fill(locPiPiPiPipP4_Measured.M());
+                        dHist_MOmegaPim->Fill(locPiPiPiPimP4_Measured.M());
+
+                	locUsedSoFar_OmegaPiPiMass.insert(locUsedThisCombo_OmegaPiPiMass);
 
                 }
 

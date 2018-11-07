@@ -62,10 +62,18 @@ class DSelector_omega_2pi : public DSelector
                 TH1F* dHist_KinFitCL;
                 TH1F* dHist_KinFitChiSq;
 
+                TH1F* dHist_MPiPi;
                 TH1F* dHist_MPiPiPi;
                 TH1F* dHist_M5Pi;
                 TH1F* dHist_MOmegaPiPi;
                 TH1F* dHist_MOmegaPiPi_acc;
+                TH1F* dHist_Pi0Mass;
+                TH1F* dHist_MOmegaPip;
+                TH1F* dHist_MOmegaPim;
+                TH2I* dHist_MOmegaPiPi_vs_MPiPiPi;
+                TH2I* dHist_MOmegaPiPi_vs_MPiPi;
+
+
 
 	ClassDef(DSelector_omega_2pi, 0);
 };

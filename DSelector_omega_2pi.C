@@ -42,8 +42,8 @@ void DSelector_omega_2pi::Init(TTree *locTree)
 	//PID
 	dAnalysisActions.push_back(new DHistogramAction_ParticleID(dComboWrapper, false));
 	//below: value: +/- N ns, Unknown: All PIDs, SYS_NULL: all timing systems
-	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.5, PiPlus, SYS_TOF));
-	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.5, PiMinus, SYS_TOF));
+	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.2, PiPlus, SYS_TOF));
+	dAnalysisActions.push_back(new DCutAction_PIDDeltaT(dComboWrapper, false, 0.2, PiMinus, SYS_TOF));
 
 	//MASSES
 	dAnalysisActions.push_back(new DHistogramAction_InvariantMass(dComboWrapper, false, Pi0, 1100, 0.08, 0.19, "Pi0"));
@@ -207,6 +207,8 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		//Multiple combos: Contain maps within a set (easier, faster to search)
 	set<map<Particle_t, set<Int_t> > > locUsedSoFar_MissingMass;
         set<map<Particle_t, set<Int_t> > > locUsedSoFar_OmegaPiPiMass;
+        set<map<Particle_t, set<Int_t> > > locUsedSoFar_OmegaMass;
+	set<map<Particle_t, set<Int_t> > > locUsedSoFar_PiPiMass;
 	set<set<Int_t> > locUsedSoFar_Pi0Mass;
 
 	//INSERT USER ANALYSIS UNIQUENESS TRACKING HERE
@@ -357,13 +359,8 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		}
 
 
-                if(locAccid) {
-                        dComboWrapper->Set_IsComboCut(true);
-                        continue;
-                }
-
 		/**************************************** FILL 5PI MASS BEFORE PID CUTS *************************************/
-		dHist_M5Pi->Fill(locOmegaPiPiP4_Measured.M());
+		dHist_M5Pi->Fill(locOmegaPiPiP4_Measured.M(), locWeight);
 
                 // make pions from omega as 1, the other pions as 2
 
@@ -431,7 +428,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		//Histogram beam energy (if haven't already)
 		if(locUsedSoFar_BeamEnergy.find(locBeamID) == locUsedSoFar_BeamEnergy.end())
 		{
-			dHist_BeamEnergy->Fill(locBeamP4.E());
+			dHist_BeamEnergy->Fill(locBeamP4.E(), locWeight);
 			locUsedSoFar_BeamEnergy.insert(locBeamID);
 		}
 
@@ -469,7 +466,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		if(locUsedSoFar_MissingMass.find(locUsedThisCombo_MissingMass) == locUsedSoFar_MissingMass.end())
 		{
 			//unique missing mass combo: histogram it, and register this combo of particles
-			dHist_MissingMassSquared->Fill(locMissingMassSquared);
+			dHist_MissingMassSquared->Fill(locMissingMassSquared, locWeight);
 			locUsedSoFar_MissingMass.insert(locUsedThisCombo_MissingMass);
 		}
 
@@ -495,9 +492,46 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		if(locUsedSoFar_Pi0Mass.find(locUsedThisCombo_Pi0Mass) == locUsedSoFar_Pi0Mass.end())
 		{
 			//unique missing mass combo: histogram it, and register this combo of particles
-			dHist_Pi0Mass->Fill(locPi0Mass);
+			dHist_Pi0Mass->Fill(locPi0Mass, locWeight);
 			locUsedSoFar_Pi0Mass.insert(locUsedThisCombo_Pi0Mass);
 		}
+
+                /***************************************** HISTOGRAM OMEGA INVARIANT MASS ******************************************/
+
+
+                //Uniqueness tracking:
+                map<Particle_t, set<Int_t> > locUsedThisCombo_OmegaMass;
+                locUsedThisCombo_OmegaMass[PiPlus].insert(locPiPlus1TrackID);
+                locUsedThisCombo_OmegaMass[PiMinus].insert(locPiMinus1TrackID);
+                locUsedThisCombo_OmegaMass[Gamma].insert(locPhoton1NeutralID);
+                locUsedThisCombo_OmegaMass[Gamma].insert(locPhoton2NeutralID);
+
+                //compare to what's been used so far
+                if(locUsedSoFar_OmegaMass.find(locUsedThisCombo_OmegaMass) == locUsedSoFar_OmegaMass.end())
+                {
+                        //unique missing mass combo: histogram it, and register this combo of particles
+			dHist_MPiPiPi->Fill(locPiPiPiP4_Measured.M(), locWeight);
+                        locUsedSoFar_OmegaMass.insert(locUsedThisCombo_OmegaMass);
+                }
+
+
+                /***************************************** HISTOGRAM PIPI (NOT FROM OMEGA) INVARIANT MASS ******************************************/
+
+
+                //Uniqueness tracking:
+                map<Particle_t, set<Int_t> > locUsedThisCombo_PiPiMass;
+                locUsedThisCombo_PiPiMass[PiPlus].insert(locPiPlus2TrackID);
+                locUsedThisCombo_PiPiMass[PiMinus].insert(locPiMinus2TrackID);
+
+                //compare to what's been used so far
+                if(locUsedSoFar_PiPiMass.find(locUsedThisCombo_PiPiMass) == locUsedSoFar_PiPiMass.end())
+                {
+                        //unique missing mass combo: histogram it, and register this combo of particles
+                        if(omega_min < 0.05) {
+	                        dHist_MPiPi->Fill(locPiPiP4_Measured.M(), locWeight);
+			}
+                        locUsedSoFar_PiPiMass.insert(locUsedThisCombo_OmegaMass);
+                }
 
 
                 /***************************************** HISTOGRAM OMEGA PIPI INVARIANT MASS, ETC ******************************************/
@@ -515,22 +549,18 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
                 {
                   // let's plot some masses
 
-                        dHist_MPiPi->Fill(locPiPiP4_Measured.M());
-			dHist_MPiPiPi->Fill(locPiPiPiP4_Measured.M());
-			dHist_MOmegaPiPi_vs_MPiPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiPiP4_Measured.M());
+			//dHist_MOmegaPiPi_vs_MPiPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiPiP4_Measured.M());
 
-	                if(omega_min > 0.05) {
-        	                dComboWrapper->Set_IsComboCut(true);
-                	        continue;
-                	}
+	                if(omega_min < 0.05) {
 
-			dHist_MOmegaPiPi->Fill(locOmegaPiPiP4_Measured.M());
-                        dHist_MOmegaPiPi_vs_MPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiP4_Measured.M());
+				dHist_MOmegaPiPi->Fill(locOmegaPiPiP4_Measured.M(), locWeight);
+        	                //dHist_MOmegaPiPi_vs_MPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiP4_Measured.M());
 
-                        dHist_MOmegaPip->Fill(locPiPiPiPipP4_Measured.M());
-                        dHist_MOmegaPim->Fill(locPiPiPiPimP4_Measured.M());
+                	        dHist_MOmegaPip->Fill(locPiPiPiPipP4_Measured.M(), locWeight);
+                        	dHist_MOmegaPim->Fill(locPiPiPiPimP4_Measured.M(), locWeight);
 
-                	locUsedSoFar_OmegaPiPiMass.insert(locUsedThisCombo_OmegaPiPiMass);
+	                	locUsedSoFar_OmegaPiPiMass.insert(locUsedThisCombo_OmegaPiPiMass);
+			}
 
                 }
 

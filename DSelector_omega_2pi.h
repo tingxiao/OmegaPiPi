@@ -54,6 +54,9 @@ class DSelector_omega_2pi : public DSelector
 		// DEFINE YOUR HISTOGRAMS HERE
 		// EXAMPLES:
 		TH1I* dHist_MissingMassSquared;
+                TH1I* dHist_MissingMassSquared_prompt;
+                TH1I* dHist_MissingMassSquared_acc;
+
 		TH1I* dHist_BeamEnergy;
 
                 TH1F* dHist_RFTime;
@@ -64,10 +67,17 @@ class DSelector_omega_2pi : public DSelector
 
                 TH1F* dHist_MPiPi;
                 TH1F* dHist_MPiPiPi;
+                TH1F* dHist_MPiPiPi_acc;
+                TH1F* dHist_MPiPiPi_prompt;
+
                 TH1F* dHist_M5Pi;
                 TH1F* dHist_MOmegaPiPi;
                 TH1F* dHist_MOmegaPiPi_acc;
+                TH1F* dHist_MOmegaPiPi_prompt;
                 TH1F* dHist_Pi0Mass;
+                TH1F* dHist_Pi0Mass_acc;
+                TH1F* dHist_Pi0Mass_prompt;
+
                 TH1F* dHist_MOmegaPip;
                 TH1F* dHist_MOmegaPim;
                 TH2I* dHist_MOmegaPiPi_vs_MPiPiPi;

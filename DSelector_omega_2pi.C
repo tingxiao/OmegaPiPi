@@ -91,6 +91,9 @@ void DSelector_omega_2pi::Init(TTree *locTree)
 
 	//EXAMPLE MANUAL HISTOGRAMS:
 	dHist_MissingMassSquared = new TH1I("MissingMassSquared", ";Missing Mass Squared (GeV/c^{2})^{2}", 600, -0.06, 0.06);
+        dHist_MissingMassSquared_acc = new TH1I("MissingMassSquared_acc", ";Missing Mass Squared (GeV/c^{2})^{2}", 600, -0.06, 0.06);
+        dHist_MissingMassSquared_prompt = new TH1I("MissingMassSquared_prompt", ";Missing Mass Squared (GeV/c^{2})^{2}", 600, -0.06, 0.06);
+
 	dHist_BeamEnergy = new TH1I("BeamEnergy", ";Beam Energy (GeV)", 600, 0.0, 12.0);
 
         dHist_RFTime = new TH1F("RFTime", "; RF Time (ns)", 100, -10.0, 10.0);
@@ -100,6 +103,10 @@ void DSelector_omega_2pi::Init(TTree *locTree)
         dHist_KinFitChiSq = new TH1F("KinFitChiSq", ";KinFit #chi^{2}", 200, 0.0, 100.0);
 
         dHist_MPiPiPi = new TH1F("MPiPiPi", ";M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 100, 0.3, 1.3 );
+        dHist_MPiPiPi_acc = new TH1F("MPiPiPi_acc", ";M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 100, 0.3, 1.3 );
+        dHist_MPiPiPi_prompt = new TH1F("MPiPiPi_prompt", ";M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 100, 0.3, 1.3 );
+
+
         dHist_MPiPi = new TH1F("MPiPi", ";M(#pi^{+}#pi^{-}) (GeV)", 120, 0.3, 1.5 );
 
         dHist_M5Pi = new TH1F("M5Pi", ";M(#pi^{+}#pi^{-}#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5);
@@ -109,7 +116,12 @@ void DSelector_omega_2pi::Init(TTree *locTree)
 
         dHist_MOmegaPiPi = new TH1F("MOmegaPiPi", ";M(#omega#pi^{+}#pi^{-}) (GeV)", 500, 0.0, 5);
         dHist_MOmegaPiPi_acc = new TH1F("MOmegaPiPi_acc", ";M(#omega#pi^{+}#pi^{-}) (GeV)", 500, 0.0, 5);
+        dHist_MOmegaPiPi_prompt = new TH1F("MOmegaPiPi_prompt", ";M(#omega#pi^{+}#pi^{-}) (GeV)", 500, 0.0, 5);
+
+
 	dHist_Pi0Mass = new TH1F("Pi0Mass", ";#gamma#gamma Invariant Mass", 680, 0.05, 0.22);
+        dHist_Pi0Mass_prompt = new TH1F("Pi0Mass_prompt", ";#gamma#gamma Invariant Mass", 680, 0.05, 0.22);
+        dHist_Pi0Mass_acc = new TH1F("Pi0Mass_acc", ";#gamma#gamma Invariant Mass", 680, 0.05, 0.22);
 
 	dHist_MOmegaPiPi_vs_MPiPiPi = new TH2I("MOmegaPiPi_vs_MPiPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5.0, 500, 0.0, 5.0);
         dHist_MOmegaPiPi_vs_MPiPi = new TH2I("MOmegaPiPi_vs_MPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}) (GeV) (after #omega cut)", 500, 0.0, 5.0, 500, 0.0, 5.0);
@@ -467,6 +479,8 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		{
 			//unique missing mass combo: histogram it, and register this combo of particles
 			dHist_MissingMassSquared->Fill(locMissingMassSquared, locWeight);
+			if(locAccid) dHist_MissingMassSquared_acc->Fill(locMissingMassSquared);
+			else dHist_MissingMassSquared_prompt->Fill(locMissingMassSquared);
 			locUsedSoFar_MissingMass.insert(locUsedThisCombo_MissingMass);
 		}
 
@@ -493,6 +507,8 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 		{
 			//unique missing mass combo: histogram it, and register this combo of particles
 			dHist_Pi0Mass->Fill(locPi0Mass, locWeight);
+			if(locAccid) dHist_Pi0Mass_acc->Fill(locPi0Mass);
+			else dHist_Pi0Mass_prompt->Fill(locPi0Mass);
 			locUsedSoFar_Pi0Mass.insert(locUsedThisCombo_Pi0Mass);
 		}
 
@@ -511,6 +527,8 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
                 {
                         //unique missing mass combo: histogram it, and register this combo of particles
 			dHist_MPiPiPi->Fill(locPiPiPiP4_Measured.M(), locWeight);
+                        if(locAccid) dHist_MPiPiPi_acc->Fill(locPiPiPiP4_Measured.M());
+			else dHist_MPiPiPi_prompt->Fill(locPiPiPiP4_Measured.M());
                         locUsedSoFar_OmegaMass.insert(locUsedThisCombo_OmegaMass);
                 }
 
@@ -555,6 +573,9 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 
 				dHist_MOmegaPiPi->Fill(locOmegaPiPiP4_Measured.M(), locWeight);
         	                //dHist_MOmegaPiPi_vs_MPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiP4_Measured.M());
+
+	                        if(locAccid) dHist_MOmegaPiPi_acc->Fill(locOmegaPiPiP4_Measured.M());
+				else dHist_MOmegaPiPi_prompt->Fill(locOmegaPiPiP4_Measured.M());
 
                 	        dHist_MOmegaPip->Fill(locPiPiPiPipP4_Measured.M(), locWeight);
                         	dHist_MOmegaPim->Fill(locPiPiPiPimP4_Measured.M(), locWeight);

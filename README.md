@@ -3,7 +3,10 @@
 ## Process:
 gamma p->pi^+pi^-pi^+pi^-pi^0 p
 
+The pi^+ and pi^- from the combination of pi^+pi^-pi^0 with invariant mass closest to the omega mass are assumed from omega.
 
+## Root file:
+e.g. tree_pi0pippippimpim__B4_031057.root
 
 ## Event selections:
 

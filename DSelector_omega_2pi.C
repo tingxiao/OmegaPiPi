@@ -107,7 +107,7 @@ void DSelector_omega_2pi::Init(TTree *locTree)
         dHist_MPiPiPi_prompt = new TH1F("MPiPiPi_prompt", ";M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 100, 0.3, 1.3 );
 
 
-        dHist_MPiPi = new TH1F("MPiPi", ";M(#pi^{+}#pi^{-}) (GeV)", 120, 0.3, 1.5 );
+        dHist_MPiPi = new TH1F("MPiPi", ";M(#pi^{+}#pi^{-}) (after #omega cut) (GeV)", 120, 0.3, 1.5 );
 
         dHist_M5Pi = new TH1F("M5Pi", ";M(#pi^{+}#pi^{-}#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5);
 
@@ -123,9 +123,18 @@ void DSelector_omega_2pi::Init(TTree *locTree)
         dHist_Pi0Mass_prompt = new TH1F("Pi0Mass_prompt", ";#gamma#gamma Invariant Mass", 680, 0.05, 0.22);
         dHist_Pi0Mass_acc = new TH1F("Pi0Mass_acc", ";#gamma#gamma Invariant Mass", 680, 0.05, 0.22);
 
-	dHist_MOmegaPiPi_vs_MPiPiPi = new TH2I("MOmegaPiPi_vs_MPiPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5.0, 500, 0.0, 5.0);
-        dHist_MOmegaPiPi_vs_MPiPi = new TH2I("MOmegaPiPi_vs_MPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}) (GeV) (after #omega cut)", 500, 0.0, 5.0, 500, 0.0, 5.0);
+	dHist_MOmegaPiPi_vs_MPiPiPi = new TH2I("MOmegaPiPi_vs_MPiPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5.0, 300, 0.0, 3.0);
+        dHist_MOmegaPiPi_vs_MPiPi = new TH2I("MOmegaPiPi_vs_MPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(#pi^{+}#pi^{-}) (GeV)", 500, 0.0, 5.0, 300, 0.0, 3.0);
 
+        dHist_MOmegaPiPi_vs_MPPip1 = new TH2I("MOmegaPiPi_vs_MPPip1", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(p#pi^{+}) (from #omega) (GeV)", 500, 0.0, 5.0, 350, 0.5, 4);
+        dHist_MOmegaPiPi_vs_MPPim1 = new TH2I("MOmegaPiPi_vs_MPPim1", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(p#pi^{-}) (from #omega) (GeV)", 500, 0.0, 5.0, 350, 0.5, 4);
+        dHist_MOmegaPiPi_vs_MPPip2 = new TH2I("MOmegaPiPi_vs_MPPip2", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(p#pi^{+}) (not from #omega) (GeV)", 500, 0.0, 5.0, 350, 0.5, 4);
+        dHist_MOmegaPiPi_vs_MPPim2 = new TH2I("MOmegaPiPi_vs_MPPim2", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(p#pi^{-}) (not from #omega) (GeV)", 500, 0.0, 5.0, 350, 0.5, 4);
+
+        dHist_MOmegaPiPi_vs_MPPiPiPi = new TH2I("MOmegaPiPi_vs_MPPiPiPi", " ;M(#omega#pi^{+}#pi^{-}) (GeV);M(p#pi^{+}#pi^{-}#pi^{0}) (GeV)", 500, 0.0, 5.0, 300, 1.5, 4.5);
+
+
+        dHist_MPiPiPi_vs_MPiPi = new TH2I("MPiPiPi_vs_MPiPi", " ;M(#pi^{+}#pi^{-}#pi^{0}) (GeV);M(#pi^{+}#pi^{-}) (GeV)", 300, 0.0, 3.0, 300, 0.0, 3.0);
 
 
 	/************************** EXAMPLE USER INITIALIZATION: CUSTOM OUTPUT BRANCHES - MAIN TREE *************************/
@@ -444,21 +453,31 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 			locUsedSoFar_BeamEnergy.insert(locBeamID);
 		}
 
-		/************************************ EXAMPLE: HISTOGRAM MISSING MASS SQUARED ************************************/
-/*
+                if(locBeamP4.E()<8)
+                {
+                        dComboWrapper->Set_IsComboCut(true);
+                        continue;
+                }
+
+		/************************************ EXAMPLE: HISTOGRAM CHI SQUARE *********************************************/
+
+
+
                 // let's cut on the kinematic fit first
-                dHist_KinFitCL->Fill(dComboWrapper->Get_ConfidenceLevel_KinFit());
-                dHist_KinFitChiSq->Fill(dComboWrapper->Get_ChiSq_KinFit());
+//                dHist_KinFitCL->Fill(dComboWrapper->Get_ConfidenceLevel_KinFit());
+//                dHist_KinFitChiSq->Fill(dComboWrapper->Get_ChiSq_KinFit());
 
                 //if(dComboWrapper->Get_ConfidenceLevel_KinFit() <= 0.) {
                 //if(dComboWrapper->Get_ConfidenceLevel_KinFit() < 1.E-20) { 
                 //if(dComboWrapper->Get_ConfidenceLevel_KinFit() < 5.73303E-7) {  // 5 sigma
-                if(dComboWrapper->Get_ConfidenceLevel_KinFit() < 0.01) { 
+//                if(dComboWrapper->Get_ConfidenceLevel_KinFit() < 0.01) { 
                 //if(dComboWrapper->Get_ConfidenceLevel_KinFit() < 0.1) { 
-                        dComboWrapper->Set_IsComboCut(true);
-                        continue;
-                }
-*/
+//                        dComboWrapper->Set_IsComboCut(true);
+//                        continue;
+//                }
+
+                /************************************ EXAMPLE: HISTOGRAM MISSING MASS SQUARED ************************************/
+
 		//Missing Mass Squared
 		double locMissingMassSquared = locMissingP4_Measured.M2();
 
@@ -514,7 +533,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 
                 /***************************************** HISTOGRAM OMEGA INVARIANT MASS ******************************************/
 
-
+		bool uniqueOmega = false;
                 //Uniqueness tracking:
                 map<Particle_t, set<Int_t> > locUsedThisCombo_OmegaMass;
                 locUsedThisCombo_OmegaMass[PiPlus].insert(locPiPlus1TrackID);
@@ -526,6 +545,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
                 if(locUsedSoFar_OmegaMass.find(locUsedThisCombo_OmegaMass) == locUsedSoFar_OmegaMass.end())
                 {
                         //unique missing mass combo: histogram it, and register this combo of particles
+			uniqueOmega = true;
 			dHist_MPiPiPi->Fill(locPiPiPiP4_Measured.M(), locWeight);
                         if(locAccid) dHist_MPiPiPi_acc->Fill(locPiPiPiP4_Measured.M());
 			else dHist_MPiPiPi_prompt->Fill(locPiPiPiP4_Measured.M());
@@ -535,7 +555,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 
                 /***************************************** HISTOGRAM PIPI (NOT FROM OMEGA) INVARIANT MASS ******************************************/
 
-
+                bool uniquePiPi = false;
                 //Uniqueness tracking:
                 map<Particle_t, set<Int_t> > locUsedThisCombo_PiPiMass;
                 locUsedThisCombo_PiPiMass[PiPlus].insert(locPiPlus2TrackID);
@@ -545,6 +565,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
                 if(locUsedSoFar_PiPiMass.find(locUsedThisCombo_PiPiMass) == locUsedSoFar_PiPiMass.end())
                 {
                         //unique missing mass combo: histogram it, and register this combo of particles
+			uniquePiPi = true;
                         if(omega_min < 0.05) {
 	                        dHist_MPiPi->Fill(locPiPiP4_Measured.M(), locWeight);
 			}
@@ -554,6 +575,7 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
 
                 /***************************************** HISTOGRAM OMEGA PIPI INVARIANT MASS, ETC ******************************************/
 
+                bool uniqueOmegaPiPi = false;
                 map<Particle_t, set<Int_t> > locUsedThisCombo_OmegaPiPiMass;
                 locUsedThisCombo_OmegaPiPiMass[PiPlus].insert(locPiPlus1TrackID);
                 locUsedThisCombo_OmegaPiPiMass[PiPlus].insert(locPiPlus2TrackID);
@@ -567,25 +589,40 @@ Bool_t DSelector_omega_2pi::Process(Long64_t locEntry)
                 {
                   // let's plot some masses
 
-			//dHist_MOmegaPiPi_vs_MPiPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiPiP4_Measured.M());
-
+                        uniqueOmegaPiPi = true;
 	                if(omega_min < 0.05) {
 
 				dHist_MOmegaPiPi->Fill(locOmegaPiPiP4_Measured.M(), locWeight);
-        	                //dHist_MOmegaPiPi_vs_MPiPi->Fill(locOmegaPiPiP4_Measured.M(),locPiPiP4_Measured.M());
 
 	                        if(locAccid) dHist_MOmegaPiPi_acc->Fill(locOmegaPiPiP4_Measured.M());
 				else dHist_MOmegaPiPi_prompt->Fill(locOmegaPiPiP4_Measured.M());
 
                 	        dHist_MOmegaPip->Fill(locPiPiPiPipP4_Measured.M(), locWeight);
                         	dHist_MOmegaPim->Fill(locPiPiPiPimP4_Measured.M(), locWeight);
+				dHist_MOmegaPiPi_vs_MPPip1->Fill(locOmegaPiPiP4_Measured.M(), (locPiPlus1P4_Measured+locProtonP4_Measured).M(), locWeight);
+                                dHist_MOmegaPiPi_vs_MPPip2->Fill(locOmegaPiPiP4_Measured.M(), (locPiPlus2P4_Measured+locProtonP4_Measured).M(), locWeight);
+                                dHist_MOmegaPiPi_vs_MPPim1->Fill(locOmegaPiPiP4_Measured.M(), (locPiMinus1P4_Measured+locProtonP4_Measured).M(), locWeight);
+                                dHist_MOmegaPiPi_vs_MPPim2->Fill(locOmegaPiPiP4_Measured.M(), (locPiMinus2P4_Measured+locProtonP4_Measured).M(), locWeight);
+				dHist_MOmegaPiPi_vs_MPPiPiPi->Fill(locOmegaPiPiP4_Measured.M(), (locPiPiPiP4_Measured+locProtonP4_Measured).M(), locWeight);
 
 	                	locUsedSoFar_OmegaPiPiMass.insert(locUsedThisCombo_OmegaPiPiMass);
 			}
 
                 }
 
+		if(uniqueOmegaPiPi && uniqueOmega) {
+			dHist_MOmegaPiPi_vs_MPiPiPi->Fill(locOmegaPiPiP4_Measured.M(), locPiPiPiP4_Measured.M(), locWeight);
+		}
 
+
+                if(uniqueOmegaPiPi && uniquePiPi) {
+			dHist_MOmegaPiPi_vs_MPiPi->Fill(locOmegaPiPiP4_Measured.M(), locPiPiP4_Measured.M(), locWeight);
+		}
+
+
+                if(uniqueOmega && uniquePiPi) {
+                        dHist_MPiPiPi_vs_MPiPi->Fill(locPiPiPiP4_Measured.M(), locPiPiP4_Measured.M(), locWeight);
+                }
 
 
 		/****************************************** FILL FLAT TREE (IF DESIRED) ******************************************/
